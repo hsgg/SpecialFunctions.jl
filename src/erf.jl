@@ -298,7 +298,7 @@ function erfcx(x::BigFloat)
         # asymptotic series
         # starts to diverge at iteration i = 2^30 or 2^60
         # final term will be < Γ(2*i+1)/(2^i * Γ(i+1)) / (2^(i+1))
-        # so good to (lgamma(2*i+1) - lgamma(i+1))/log(2) - 2*i - 1
+        # so good to (loggamma(2*i+1) - loggamma(i+1))/log(2) - 2*i - 1
         #            ≈ 3.07e10 or 6.75e19 bits
         # which is larger than the memory of the respective machines
         ϵ = eps(BigFloat)/4

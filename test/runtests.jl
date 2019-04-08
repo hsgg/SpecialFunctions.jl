@@ -626,11 +626,12 @@ end
             @test gamma(convert(elty,1/2)) ≈ convert(elty,sqrt(π))
             @test gamma(convert(elty,-1/2)) ≈ convert(elty,-2sqrt(π))
             @test logabsgamma(convert(elty,-1/2)) ≈ convert(elty,log(abs(gamma(-1/2))))
-            @test loggamma(convert(elty,1/2)) ≈ convert(elty,log(gamma(1/2)))
+            @test loggamma(convert(elty,-3/2)) ≈ convert(elty,log(gamma(-3/2)))
         end
         @test loggamma(1.4+3.7im) ≈ -3.7094025330996841898 + 2.4568090502768651184im
         @test loggamma(1.4+3.7im) ≈ log(gamma(1.4+3.7im))
         @test loggamma(-4.2+0im) ≈ logabsgamma(-4.2)-5pi*im
+        @test logabsgamma(-4.2) ≈ logabsgamma(-4.2+0im)
         @test SpecialFunctions.factorial(3.0) == gamma(4.0) == factorial(3)
         for x in (3.2, 2+1im, 3//2, 3.2+0.1im)
             @test SpecialFunctions.factorial(x) == gamma(1+x)
@@ -643,6 +644,7 @@ end
         @test_throws MethodError lfactorial(1.0)
 	# Ensure that loggamma with real argument only returns real numbers (issue #157)
 	@test_throws DomainError loggamma(-4.5)
+	@test loggamma(-3.5) ≈ log(gamma(-3.5))
     end
 
     # loggamma and logabsgamma test cases (from Wolfram Alpha)
