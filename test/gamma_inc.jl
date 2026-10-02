@@ -80,7 +80,7 @@ end
             @test gamma_inc(big(0.5), big(0.01))[1] ≈ erf(sqrt(big(0.01))) rtol=4eps(BigFloat)
             @test gamma_inc(big(0.5), big(0.3))[1] ≈ erf(sqrt(big(0.3))) rtol=4eps(BigFloat)
 
-            # Q(a,x) ≥ 1/2, so P(a,x) is computed from the series
+            # P(a,x) from the series, and Q(a,x) = 1 - P(a,x)
             @test gamma_inc(big(10), big(0.1))[1] ≈ gamma_inc_mpfr(big(10), big(0.1))[1] rtol=4eps(BigFloat)
             @test gamma_inc(big(10), big(0.1))[2] ≈ gamma_inc_mpfr(big(10), big(0.1))[2] rtol=4eps(BigFloat)
             @test gamma_inc(big(20), big(0.01))[1] ≈ gamma_inc_mpfr(big(20), big(0.01))[1] rtol=4eps(BigFloat)
@@ -89,14 +89,27 @@ end
             @test gamma_inc(big(100), big(50))[2] ≈ gamma_inc_mpfr(big(100), big(50))[2] rtol=4eps(BigFloat)
             @test gamma_inc(big(1e4), big(9e3))[1] ≈ gamma_inc_mpfr(big(1e4), big(9e3))[1] rtol=4eps(BigFloat)
             @test gamma_inc(big(1e4), big(9e3))[2] ≈ gamma_inc_mpfr(big(1e4), big(9e3))[2] rtol=4eps(BigFloat)
-
-            # Q(a,x) < 1/2, so P(a,x) = 1 - Q(a,x)
             @test gamma_inc(big(30.5), big(30.5))[1] ≈ gamma_inc_mpfr(big(30.5), big(30.5))[1] rtol=4eps(BigFloat)
             @test gamma_inc(big(30.5), big(30.5))[2] ≈ gamma_inc_mpfr(big(30.5), big(30.5))[2] rtol=4eps(BigFloat)
+
+            # P(a,x) ≈ 1 from the series, so Q(a,x) = 1 - P(a,x) ≪ 1 is recomputed with more bits
             @test gamma_inc(big(1e-10), big(1e-20))[1] ≈ gamma_inc_mpfr(big(1e-10), big(1e-20))[1] rtol=4eps(BigFloat)
             @test gamma_inc(big(1e-10), big(1e-20))[2] ≈ gamma_inc_mpfr(big(1e-10), big(1e-20))[2] rtol=4eps(BigFloat)
+            @test gamma_inc(big(1e-100), big(0.5))[1] ≈ gamma_inc_mpfr(big(1e-100), big(0.5))[1] rtol=4eps(BigFloat)
+            @test gamma_inc(big(1e-100), big(0.5))[2] ≈ gamma_inc_mpfr(big(1e-100), big(0.5))[2] rtol=4eps(BigFloat)
+            @test gamma_inc(big(1e-10), big(2))[1] ≈ gamma_inc_mpfr(big(1e-10), big(2))[1] rtol=4eps(BigFloat)
+            @test gamma_inc(big(1e-10), big(2))[2] ≈ gamma_inc_mpfr(big(1e-10), big(2))[2] rtol=4eps(BigFloat)
+
+            # Q(a,x) from the continued fraction, and P(a,x) = 1 - Q(a,x). At 1024 bits the series
+            # is used for x < 64, so (3, 20) and (0.5, 30) are computed like the cases above.
             @test gamma_inc(big(3), big(20))[1] ≈ gamma_inc_mpfr(big(3), big(20))[1] rtol=4eps(BigFloat)
             @test gamma_inc(big(3), big(20))[2] ≈ gamma_inc_mpfr(big(3), big(20))[2] rtol=4eps(BigFloat)
+            @test gamma_inc(big(0.5), big(30))[1] ≈ gamma_inc_mpfr(big(0.5), big(30))[1] rtol=4eps(BigFloat)
+            @test gamma_inc(big(0.5), big(30))[2] ≈ gamma_inc_mpfr(big(0.5), big(30))[2] rtol=4eps(BigFloat)
+            @test gamma_inc(big(2.5), big(100))[1] ≈ gamma_inc_mpfr(big(2.5), big(100))[1] rtol=4eps(BigFloat)
+            @test gamma_inc(big(2.5), big(100))[2] ≈ gamma_inc_mpfr(big(2.5), big(100))[2] rtol=4eps(BigFloat)
+            @test gamma_inc(big(1e3), big(1.1e3))[1] ≈ gamma_inc_mpfr(big(1e3), big(1.1e3))[1] rtol=4eps(BigFloat)
+            @test gamma_inc(big(1e3), big(1.1e3))[2] ≈ gamma_inc_mpfr(big(1e3), big(1.1e3))[2] rtol=4eps(BigFloat)
         end
     end
 

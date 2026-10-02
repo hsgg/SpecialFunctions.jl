@@ -943,7 +943,7 @@ function _gamma_inc(a::Float64, x::Float64, ind::Integer)
     end
 end
 
-function _gamma_inc(a::BigFloat,x::BigFloat,ind::Integer) #BigFloat version from GNU MPFR wrapped via ccall
+function _gamma_inc(a::BigFloat,x::BigFloat,ind::Integer)
     if a < 0 || x < 0
         throw(DomainError((a, x, ind), "`a` and `x` must be greater than 0 ---- Domain : (0, Inf)"))
     elseif iszero(a) && iszero(x)
@@ -956,20 +956,24 @@ function _gamma_inc(a::BigFloat,x::BigFloat,ind::Integer) #BigFloat version from
         return (zero(BigFloat), one(BigFloat))
     end
 
-    prec = precision(BigFloat)
     # compute with guard bits and round to the current precision at the end
-    p, q = setprecision(BigFloat, prec + 32) do
-        z = BigFloat()
-        ccall((:mpfr_gamma_inc, :libmpfr),
-              Int32,
-              (Ref{BigFloat}, Ref{BigFloat}, Ref{BigFloat}, Int32),
-              z, a, x, ROUNDING_MODE[])
-        q = z/gamma(a)
-        # p = 1 - q suffers from catastrophic cancellation if q ≈ 1, so compute p directly in that case
-        p = q >= 0.5 ? gamma_inc_taylor(a, x, ind)[1] : 1 - q
-        return p, q
+    prec = precision(BigFloat)
+    w = prec + 32
+    # the continued fraction converges slowly for small x relative to the precision
+    if x < max(a + 1, prec/16)
+        while true
+            p, q = setprecision(() -> gamma_inc_taylor(a, x, ind), BigFloat, w)
+            # q = 1 - p loses bits if p ≈ 1, in which case we retry with that many more bits
+            lost = iszero(q) ? w : -exponent(q)
+            if w - lost >= prec + 24
+                return (BigFloat(p; precision=prec), BigFloat(q; precision=prec))
+            end
+            w = prec + 32 + lost
+        end
+    else
+        p, q = setprecision(() -> gamma_inc_cf(a, x, ind), BigFloat, w)
+        return (BigFloat(p; precision=prec), BigFloat(q; precision=prec))
     end
-    return (BigFloat(p; precision=prec), BigFloat(q; precision=prec))
 end
 _gamma_inc(a::Float32,x::Float32,ind::Integer) = Float32.(_gamma_inc(Float64(a),Float64(x),ind))
 _gamma_inc(a::Float16,x::Float16,ind::Integer) = Float16.(_gamma_inc(Float64(a),Float64(x),ind))
