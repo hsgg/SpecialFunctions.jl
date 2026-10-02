@@ -431,19 +431,20 @@ External links: [DLMF 8.11.2](https://dlmf.nist.gov/8.11.2)
 
 See also: [`gamma_inc(a,x,ind)`](@ref SpecialFunctions.gamma_inc)
 """
-function gamma_inc_taylor(a::Float64, x::Float64, ind::Integer)
-    acc = acc0[ind + 1]
-    tolerance = 0.5acc
+function gamma_inc_taylor(a::T, x::T, ind::Integer) where {T<:AbstractFloat}
+    # the accuracy options only apply to Float64, other types are computed to full precision
+    acc = T === Float64 ? acc0[ind + 1] : eps(T)
+    tolerance = acc/2
 
     # compute first 21 terms
     ts = cumprod(ntuple(i -> x / (a + i), Val(21)))
-    
+
     # sum the smaller terms directly
     first_small_t = something(findfirst(<(1.0e-3), ts), 21)
     sm = t = ts[first_small_t]
     apn = a + first_small_t
     while t > tolerance
-        apn += 1.0
+        apn += 1
         t *= x / apn
         sm += t
     end
@@ -453,10 +454,10 @@ function gamma_inc_taylor(a::Float64, x::Float64, ind::Integer)
     for j ∈ last_large_t:(-1):1
         sm += ts[j]
     end
-    
-    p = (rgammax(a, x) / a) * (1.0 + sm)
-    
-    return (p, 1.0 - p)
+
+    p = (rgammax(a, x) / a) * (1 + sm)
+
+    return (p, 1 - p)
 end
 
 @doc raw"""
