@@ -956,13 +956,20 @@ function _gamma_inc(a::BigFloat,x::BigFloat,ind::Integer) #BigFloat version from
         return (zero(BigFloat), one(BigFloat))
     end
 
-    z = BigFloat()
-    ccall((:mpfr_gamma_inc, :libmpfr),
-          Int32,
-          (Ref{BigFloat}, Ref{BigFloat}, Ref{BigFloat}, Int32),
-          z, a, x, ROUNDING_MODE[])
-    q = z/gamma(a)
-    return (1.0 - q, q)
+    prec = precision(BigFloat)
+    # compute with guard bits and round to the current precision at the end
+    p, q = setprecision(BigFloat, prec + 32) do
+        z = BigFloat()
+        ccall((:mpfr_gamma_inc, :libmpfr),
+              Int32,
+              (Ref{BigFloat}, Ref{BigFloat}, Ref{BigFloat}, Int32),
+              z, a, x, ROUNDING_MODE[])
+        q = z/gamma(a)
+        # p = 1 - q suffers from catastrophic cancellation if q ≈ 1, so compute p directly in that case
+        p = q >= 0.5 ? gamma_inc_taylor(a, x, ind)[1] : 1 - q
+        return p, q
+    end
+    return (BigFloat(p; precision=prec), BigFloat(q; precision=prec))
 end
 _gamma_inc(a::Float32,x::Float32,ind::Integer) = Float32.(_gamma_inc(Float64(a),Float64(x),ind))
 _gamma_inc(a::Float16,x::Float16,ind::Integer) = Float16.(_gamma_inc(Float64(a),Float64(x),ind))
