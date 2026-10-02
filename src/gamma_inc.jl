@@ -80,6 +80,11 @@ function rgammax(a::Float64, x::Float64)
         end
     end
 end
+function rgammax(a::BigFloat, x::BigFloat)
+    t = x^a * exp(-x)
+    # MPFR computes Γ(a+1) faster than Γ(a) for a < 1
+    return a >= 1 ? t / gamma(a) : a * t / gamma(a + 1)
+end
 
 @doc raw"""
     auxgam(x)
@@ -385,31 +390,32 @@ External links: [DLMF 8.9.2](https://dlmf.nist.gov/8.9.2)
 
 See also: [`gamma_inc(a,x,ind)`](@ref SpecialFunctions.gamma_inc)
 """
-function gamma_inc_cf(a::Float64, x::Float64, ind::Integer)
-    acc = acc0[ind + 1]
-    tol = 4.0*acc
-    a2nm1 = 1.0
-    a2n = 1.0
+function gamma_inc_cf(a::T, x::T, ind::Integer) where {T<:AbstractFloat}
+    # the accuracy options only apply to Float64, other types are computed to full precision
+    acc = T === Float64 ? acc0[ind + 1] : eps(T)
+    tol = 4*acc
+    a2nm1 = one(T)
+    a2n = one(T)
     b2nm1 = x
-    b2n = x + (1.0 - a)
-    c = 1.0
+    b2n = x + (1 - a)
+    c = one(T)
     while true
        a2nm1 = x*a2n + c*a2nm1
        b2nm1 = x*b2n + c*b2nm1
-       c = c + 1.0
+       c = c + 1
        t = c - a
        a2n = a2nm1 + t*a2n
        b2n = b2nm1 + t*b2n
        a2nm1 = a2nm1/b2n
        b2nm1 = b2nm1/b2n
        a2n = a2n/b2n
-       b2n = 1.0
+       b2n = one(T)
        if abs(a2n - a2nm1/b2nm1) < tol*a2n
            break
        end
     end
     q = rgammax(a, x)*a2n
-    return (1.0 - q, q)
+    return (1 - q, q)
 end
 
 @doc raw"""
