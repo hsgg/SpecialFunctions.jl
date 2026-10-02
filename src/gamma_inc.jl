@@ -944,6 +944,18 @@ function _gamma_inc(a::Float64, x::Float64, ind::Integer)
 end
 
 function _gamma_inc(a::BigFloat,x::BigFloat,ind::Integer) #BigFloat version from GNU MPFR wrapped via ccall
+    if a < 0 || x < 0
+        throw(DomainError((a, x, ind), "`a` and `x` must be greater than 0 ---- Domain : (0, Inf)"))
+    elseif iszero(a) && iszero(x)
+        throw(DomainError((a, x, ind), "`a` and `x` must be greater than 0 ---- Domain : (0, Inf)"))
+    elseif isnan(a) || isnan(x)
+        return (BigFloat(NaN), BigFloat(NaN))
+    elseif iszero(a) || isinf(x)
+        return (one(BigFloat), zero(BigFloat))
+    elseif iszero(x) || isinf(a)
+        return (zero(BigFloat), one(BigFloat))
+    end
+
     z = BigFloat()
     ccall((:mpfr_gamma_inc, :libmpfr),
           Int32,

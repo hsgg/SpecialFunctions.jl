@@ -57,6 +57,27 @@
     @test_throws DomainError gamma_inc(1.0, -Inf)
 end
 
+@testset "incomplete gamma ratios: BigFloat" begin
+    # special values, as for the Float64 method
+    @test gamma_inc(big(0), big(2)) == (1, 0)
+    @test gamma_inc(big(0), big(Inf)) == (1, 0)
+    @test gamma_inc(big(2), big(0)) == (0, 1)
+    @test gamma_inc(big(2), big(Inf)) == (1, 0)
+    @test gamma_inc(big(Inf), big(0)) == (0, 1)
+    @test gamma_inc(big(Inf), big(2)) == (0, 1)
+    @test gamma_inc(big(Inf), big(Inf)) == (1, 0)
+    @test all(isnan, gamma_inc(big(0), big(NaN)))
+    @test all(isnan, gamma_inc(big(2), big(NaN)))
+    @test all(isnan, gamma_inc(big(Inf), big(NaN)))
+    @test all(isnan, gamma_inc(big(NaN), big(0)))
+    @test all(isnan, gamma_inc(big(NaN), big(2)))
+    @test all(isnan, gamma_inc(big(NaN), big(Inf)))
+    @test all(isnan, gamma_inc(big(NaN), big(NaN)))
+    @test_throws DomainError gamma_inc(big(-1), big(2))
+    @test_throws DomainError gamma_inc(big(1), big(-2))
+    @test_throws DomainError gamma_inc(big(0), big(0))
+end
+
 # Reference values from mpmath at 50+ digits, cross-checked against the DLMF 8.7.1
 # series and the 8.9.2 continued fraction.
 @testset "incomplete gamma ratios: Temme minimax series" begin
